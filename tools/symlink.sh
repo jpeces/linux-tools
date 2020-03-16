@@ -74,7 +74,6 @@ function get_arguments() {
             ;;
         -?*)
             printf "[warn] wrong option. Try --help option for more information.\n"
-            shift
             exit 1
             ;;
         *) # default case: No more options, so break out of the loop
