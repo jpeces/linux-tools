@@ -5,17 +5,17 @@
 function show_help() {
     printf "$(
         cat <<EOF
-Usage: symlink [OPTION]... [SOURCE_PATH] [TARGET_PATH]
+Usage: ${scriptname,,} [OPTION]... [SOURCE_PATH] [TARGET_PATH]
 Create a symbolic link of a file/directory or do it for all the files in a directory.
 
 Note: not working with subdirectories, only first layer.
 
 Options:
-    -q, --quiet
     -x                  Only executable files
     -a, --all           For all the files of in a directory (no recursive)
-    -v, --version       Output version information and exit
+    -q, --quiet         Dont print any information about the execution
     --dry-run           Do not make any change, just print what would happen.
+    -v, --version       Output version information and exit
     -h, --help          Display this help and exit \n
 EOF
     )"
@@ -25,17 +25,18 @@ EOF
 
 declare m_source_path
 declare m_target_path
+declare -i err=0
 
 # option variables
 declare opt_all
 declare opt_xfiles
 declare opt_dry_run
 
-declare scriptname="symlink"
-declare opts=$(getopt -o xavh --long all,dry-run,version,help -n "${scriptname}" -- "$@")
+declare scriptname="Symlink"
+declare opts=$(getopt -o xaqvh --long all,quiet,dry-run,version,help -n "$scriptname" -- "$@")
 
 if [ $? != 0 ]; then
-    echo "${scriptname}: failed parsing options."
+    printf "[error] $scriptname: failed parsing options\n"
     exit 1
 fi
 
@@ -51,8 +52,13 @@ function get_arguments() {
             opt_all=true
             shift
             ;;
+        -q | --quiet)
+            exec 1>/dev/null
+            shift
+            ;;
+
         -v | --version)
-            echo "Symlink 0.1"
+            echo "$scriptname 0.1.0"
             exit 0
             ;;
         --dry-run)
@@ -89,9 +95,10 @@ function check_arguments() {
         exit 1
     fi
 
-    if [ "$m_recursive" -a ! -d "$m_target_path" ]; then
-        printf "[error] target path must be a directory\n"
-        exit 1
+    if [ "$opt_xfiles" -o "$opt_all" ]; then
+        [ ! -d "$m_source_path" ] && printf "[error] source path must be a directory\n" && err+=1
+        [ ! -d "$m_target_path" ] && printf "[error] target path must be a directory\n" && err+=1
+        [ "$err" != 0 ] && exit "$err"
     fi
 
     if [ -d "$m_source_path" ]; then
