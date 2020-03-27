@@ -26,6 +26,5 @@ import::include() {
     else
         readonly name_ref=1
         source $(readlink -f -- "${current_dir}/${source_path}")
-        export BASH_ENV="${BASH_ENV} $(readlink -f -- "${current_dir}/${source_path}")"
     fi
 }
